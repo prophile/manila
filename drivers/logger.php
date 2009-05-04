@@ -100,6 +100,22 @@ class manila_driver_logger extends manila_driver
 		$this->child->table_optimise($tname);
 		echo $msg;
 	}
+	
+	public function meta_read ( $key )
+	{
+		$msg = sprintf("[LOGGER(%s)] MetaRead(%s)", get_class($this->child), $key);
+		$rv = $this->child->meta_read($key);
+		$msg .= sprintf(" = '%s'\n", $rv);
+		echo $msg;
+		return $rv;
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		$msg = sprintf("[LOGGER(%s)] MetaWrite(%s, %s)\n", get_class($this->child), $key, self::stringify($value));
+		$this->child->meta_write($key, $value);
+		echo $msg;
+	}
 }
 
 ?>

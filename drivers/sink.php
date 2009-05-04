@@ -50,6 +50,15 @@ class manila_driver_sink extends manila_driver
 	public function table_optimise ( $tname )
 	{
 	}
+	
+	public function meta_write ( $key, $value )
+	{
+	}
+	
+	public function meta_read ( $key )
+	{
+		return NULL;
+	}
 }
 
 ?>

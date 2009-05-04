@@ -98,6 +98,16 @@ class manila_driver_background extends manila_driver
 		$this->background_end();
 	}
 
+	public function meta_read ( $key )
+	{
+		return $this->child->meta_read($key);
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		// meta writes are so trivial there is no point backgrounding
+		$this->child->meta_write($key, $value);
+	}
 }
 
 ?>

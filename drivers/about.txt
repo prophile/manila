@@ -67,7 +67,7 @@ Parameters:
 
 === splitter ===
 
-This driver splits requests for different tables off to sub-drivers.
+This driver splits requests for different tables off to sub-drivers. It is suggested that you have a catch-all as a last resort. Metadata will go to the driver which matches the table name __meta
 
 Parameters:
   fnmatch-style patterns => sub-drivers

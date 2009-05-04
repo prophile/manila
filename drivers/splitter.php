@@ -13,6 +13,7 @@ class manila_driver_splitter extends manila_driver
 		{
 			$patterns[$pattern] = manila::get_driver($target);
 		}
+		$tables[] = '__meta';
 		foreach ($tables as $table)
 		{
 			$found = false;
@@ -79,6 +80,16 @@ class manila_driver_splitter extends manila_driver
 	public function table_optimise ( $tname )
 	{
 		return $this->targets[$tname]->table_optimise($tname);
+	}
+	
+	public function meta_read ( $key )
+	{
+		return $this->targets['__meta']->meta_read($key);
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		$this->targets['__meta']->meta_write($key, $value);
 	}
 }
 

@@ -89,6 +89,30 @@ abstract class manila_driver_cache extends manila_driver
 	{
 		$this->child->table_optimise($tname);
 	}
+	
+	public function meta_write ( $key, $value )
+	{
+		$this->child->meta_write($key, $value);
+		$cachekey = "__meta:$key";
+		if ($value === NULL)
+		{
+			$this->cache_delete($cachekey);
+		}
+		else
+		{
+			$this->cache_store($cachekey, $value);
+		}
+	}
+	
+	public function meta_read ( $key )
+	{
+		$cachekey = "__meta:$key";
+		if (($cv = $this->cache_fetch($cachekey)) !== NULL)
+			return $cv;
+		$val = $this->child->meta_read($key);
+		$this->cache_store($cachekey, $val);
+		return $val;
+	}
 }
 
 ?>

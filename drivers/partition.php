@@ -90,6 +90,18 @@ class manila_driver_partition extends manila_driver
 			$child->table_optimise($tname);
 		}
 	}
+	
+	public function meta_read ( $key )
+	{
+		$part = $this->partition($key);
+		return $this->children[$part]->meta_read($key);
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		$part = $this->partition($key);
+		$this->children->meta_write($key, $value);
+	}
 }
 
 ?>

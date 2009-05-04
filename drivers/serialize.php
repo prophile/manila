@@ -314,10 +314,31 @@ class manila_driver_serialize extends manila_driver
 	
 	public function table_optimise ( $tname )
 	{
-		$list = glob($this->root . "/.index.*");
+		$list = glob($this->root . "/*/.index.*");
 		foreach ($list as $idx)
 		{
 			self::rebuild_index($path);
+		}
+	}
+	
+	public function meta_read ( $key )
+	{
+		$khash = md5($key);
+		$path = $this->root . "/.meta.$khash";
+		return file_get_contents($path);
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		$khash = md5($key);
+		$path = $this->root . "/.meta.$khash";
+		if ($value === NULL && file_exists($path))
+		{
+			unlink($path);
+		}
+		else
+		{
+			file_put_contents($path, $value);
 		}
 	}
 }

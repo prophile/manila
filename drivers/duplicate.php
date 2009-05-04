@@ -195,6 +195,21 @@ class manila_driver_duplicate extends manila_driver
 		}
 		// do healing of all tables
 		$this->table_heal($tname);
+		// TODO: heal metadata?
+	}
+	
+	public function meta_read ( $key )
+	{
+		$part = $this->select_child();
+		return $this->children[$part]->meta_read($key);
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		foreach ($this->children as &$child)
+		{
+			$child->meta_write($child);
+		}
 	}
 }
 

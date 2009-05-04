@@ -96,6 +96,8 @@ abstract class manila_driver
 	abstract public function table_index_edit ( $tname, $field, $value, $key );
 	abstract public function table_index_lookup ( $tname, $field, $value );
 	abstract public function table_optimise ( $tname );
+	abstract public function meta_write ( $key, $value ); // key is a string, value is a string or NULL (= delete)
+	abstract public function meta_read ( $key );
 }
 
 class manila_table

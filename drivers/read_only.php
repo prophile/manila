@@ -75,6 +75,15 @@ class manila_driver_read_only extends manila_driver
 		// silently ignore, because maintainance scripts might do this to all tables
 	}
 
+	public function meta_read ( $key )
+	{
+		return $this->child->meta_read($key);
+	}
+	
+	public function meta_write ( $key, $value )
+	{
+		$this->violation();
+	}
 }
 
 ?>
