@@ -1,89 +1,41 @@
 <?php
 
-class manila_driver_cache_apc extends manila_driver
+require_once(MANILA_DRIVER_PATH . '/cache.php');
+
+class manila_driver_cache_apc extends manila_driver_cache
 {
-	private $child;
 	private $ttl = 0;
+	private $prefix = 'manila';
 	
-	public function __construct ( $driver_config, $table_config )
+	public function cache_init ( $driver_config )
 	{
-		$this->child = manila::get_driver($driver_config['child']);
 		if (isset($driver_config['ttl']))
 			$this->ttl = $driver_config['ttl'];
+		if (isset($driver_config['prefix']))
+			$this->prefix = $driver_config['prefix'] . ':';
 	}
 	
-	public function table_list_keys ( $tname )
+	public function cache_fetch ( $key )
 	{
-		$cachekey = "$tname:all-keys";
-		if (($cv = apc_fetch($cachekey)) !== false)
-			return $cv;
-		$k = $this->child->table_list_keys($tname);
-		apc_store($cachekey, $k, $this->ttl);
-		return $k;
-	}
-	
-	public function table_key_exists ( $tname, $key )
-	{
-		$cachekey = "$tname:data:$key";
-		if (($cv = apc_fetch($cachekey)) !== false)
-			return true;
-		return $this->child->table_key_exists($tname, $key);
-	}
-	
-	public function table_insert ( $tname, $values )
-	{
-		$cachekey = "$tname:all-keys";
-		apc_delete($cachekey);
-		return $this->child->table_insert($tname, $values);
-	}
-	
-	public function table_update ( $tname, $key, $values )
-	{
-		$cachekey = "$tname:all-keys";
-		apc_delete($cachekey);
-		$cachekey = "$tname:data:$key";
-		apc_store($cachekey, $values, $this->ttl);
-		$this->child->table_update($tname, $key, $values);
-	}
-	
-	public function table_delete ( $tname, $key )
-	{
-		$cachekey = "$tname:all-keys";
-		apc_delete($cachekey);
-		$cachekey = "$tname:data:$key";
-		apc_delete($cachekey);
-		$this->child->table_delete($tname, $key);
-	}
-	
-	public function table_truncate ( $tname )
-	{
-		apc_clear_cache('user');
-		$this->child->table_truncate($tname);
-	}
-	
-	public function table_fetch ( $tname, $key )
-	{
-		$cachekey = "$tname:data:$key";
-		if (($cv = apc_fetch($cachekey)) !== false)
-			return $cv;
-		$v = $this->child->table_fetch($tname, $key);
-		apc_store($cachekey, $v, $this->ttl);
+		$v = apc_fetch($this->prefix . $key, $found);
+		if (!$found)
+			return NULL;
 		return $v;
 	}
 	
-	public function table_index_edit ( $tname, $field, $value, $key )
+	public function cache_store ( $key, $value )
 	{
-		$this->child->table_index_edit($tname, $field, $value, $key);
+		apc_store($this->prefix . $key, $value, $this->ttl);
 	}
 	
-	public function table_index_lookup ( $tname, $field, $value )
+	public function cache_delete ( $key )
 	{
-		return $this->child->table_index_lookup($tname, $field, $value);
+		apc_delete($this->prefix . $key);
 	}
 	
-	public function table_optimise ( $tname )
+	public function cache_clear ()
 	{
-		$this->child->table_optimise($tname);
+		apc_clear_cache('user');
 	}
 }
 

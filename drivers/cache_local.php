@@ -1,96 +1,34 @@
 <?php
 
-class manila_driver_cache_local extends manila_driver
+require_once(MANILA_DRIVER_PATH . '/cache.php');
+
+class manila_driver_cache_local extends manila_driver_cache
 {
-	private $caches = array();
-	private $child;
+	private $cache = array();
 	
-	public function __construct ( $driver_config, $table_config )
+	public function cache_init ( $driver_config )
 	{
-		$this->child = manila::get_driver($driver_config['child']);
 	}
 	
-	public function table_list_keys ( $tname )
+	public function cache_fetch ( $key )
 	{
-		$cachekey = "$tname:all-keys";
-		if (isset($this->caches[$cachekey]))
-			return $this->caches[$cachekey];
-		$k = $this->child->table_list_keys($tname);
-		$this->caches[$cachekey] = $k;
-		return $k;
+		return isset($this->cache[$key]) ? $this->cache[$key] : NULL;
 	}
 	
-	public function table_key_exists ( $tname, $key )
+	public function cache_store ( $key, $value )
 	{
-		$cachekey = "$tname:data:$key";
-		if (isset($this->caches[$cachekey]))
-			return true;
-		return $this->child->table_key_exists($tname, $key);
+		$this->cache[$key] = $value;
 	}
 	
-	public function table_insert ( $tname, $values )
+	public function cache_delete ( $key )
 	{
-		$cachekey = "$tname:all-keys";
-		if (isset($this->caches[$cachekey]))
-			unset($this->caches[$cachekey]);
-		return $this->child->table_insert($tname, $values);
+		if (isset($this->cache[$key]))
+			unset($this->cache[$key]);
 	}
 	
-	public function table_update ( $tname, $key, $values )
+	public function cache_clear ()
 	{
-		$cachekey = "$tname:all-keys";
-		if (isset($this->caches[$cachekey]))
-			unset($this->caches[$cachekey]);
-		$cachekey = "$tname:data:$key";
-		$this->caches[$cachekey] = $values;
-		$this->child->table_update($tname, $key, $values);
-	}
-	
-	public function table_delete ( $tname, $key )
-	{
-		$cachekey = "$tname:all-keys";
-		if (isset($this->caches[$cachekey]))
-			unset($this->caches[$cachekey]);
-		$cachekey = "$tname:data:$key";
-		if (isset($this->caches[$cachekey]))
-		{
-			unset($this->caches[$cachekey]);
-		}
-		$this->child->table_delete($tname, $key);
-	}
-	
-	public function table_truncate ( $tname )
-	{
-		$this->caches = array();
-		$this->child->table_truncate($tname);
-	}
-	
-	public function table_fetch ( $tname, $key )
-	{
-		$cachekey = "$tname:data:$key";
-		if (isset($this->caches[$cachekey]))
-		{
-			return $this->caches[$cachekey];
-		}
-		$v = $this->child->table_fetch($tname, $key);
-		$this->caches[$cachekey] = $v;
-		return $v;
-	}
-	
-	public function table_index_edit ( $tname, $field, $value, $key )
-	{
-		$this->child->table_index_edit($tname, $field, $value, $key);
-	}
-	
-	public function table_index_lookup ( $tname, $field, $value )
-	{
-		return $this->child->table_index_lookup($tname, $field, $value);
-	}
-	
-	public function table_optimise ( $tname )
-	{
-		$this->caches = array();
-		$this->child->table_optimise($tname);
+		$this->cache = array();
 	}
 }
 
