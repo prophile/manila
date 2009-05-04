@@ -1,0 +1,73 @@
+This is a list of available manila drivers.
+
+=== background ===
+
+Use PCNTL to fork and do some tasks asynchronously in the background.
+
+Parameters:
+  child - sub-driver
+
+=== cache_apc ===
+
+This driver uses APC to cache key lists and data.
+
+Parameters:
+  child - sub-driver
+  ttl - cache expire time in seconds, 0 = no expiry (default: 0)
+
+=== cache_local ===
+
+This driver stores a local cache in memory of values, to avoid lookups for list_keys, index lookup and fetch. This does not persist between sessions.
+
+Parameters:
+  child - sub-driver
+
+=== duplicate ===
+
+This driver duplicates data across several sub-drivers, and automatically heals data on optimise.
+
+Parameters:
+  child - array of sub-drivers
+
+=== logger ===
+
+This driver logs all calls, mainly for debugging purposes, before passing them on to the child.
+
+Parameters:
+  child - sub-driver
+
+=== partition ===
+
+This driver partitions data between sub-drivers, by key.
+
+Parameters:
+  child - array of sub-drivers
+
+=== read_only ===
+
+This driver makes the underlying storage read-only.
+
+Parameters:
+  child - sub-driver
+  strict - abort on write rather than outputting warning (default: false)
+
+=== serialize ===
+
+This is a basic storage driver which stores data on the filesystem.
+
+Parameters:
+  directory - the path to the (already existing) directory to use
+
+=== sink ===
+
+This is a storage driver which discards all incoming values and always returns not found on lookup. This is mainly useful for data which is to be stored only in caches, which can use a sink driver as a child.
+
+Parameters:
+  none
+
+=== splitter ===
+
+This driver splits requests for different tables off to sub-drivers.
+
+Parameters:
+  fnmatch-style patterns => sub-drivers
