@@ -43,6 +43,21 @@ This driver partitions data between sub-drivers, by key.
 Parameters:
   child - array of sub-drivers
 
+=== passthrough ===
+
+This driver redirects calls to a sub-driver.
+
+Parameters:
+  child - sub-driver
+
+=== read_ahead ===
+
+This driver reads blocks of numeric keys for faster access.
+
+Parameters:
+  child - sub-driver
+  length - block size to read (default: 30)
+
 === read_only ===
 
 This driver makes the underlying storage read-only.

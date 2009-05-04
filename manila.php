@@ -81,6 +81,18 @@ class manila
 	{
 		return $this->table($name);
 	}
+	
+	public function get_meta ( $meta )
+	{
+		$metakey = "user:$meta";
+		return $this->driver->meta_read($metakey);
+	}
+	
+	public function write_meta ( $meta, $value )
+	{
+		$metakey = "user:$meta";
+		$this->driver->meta_write($metakey, (string)$value);
+	}
 }
 
 abstract class manila_driver
