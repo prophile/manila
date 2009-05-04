@@ -1,6 +1,6 @@
 <?php
 
-define('MANILA_DRIVER_PATH', './drivers');
+define('MANILA_DRIVER_PATH', str_replace('/manila.php', '', __FILE__) . '/drivers');
 
 class manila
 {
@@ -59,6 +59,28 @@ class manila
 		self::$global_table_config = array();
 		$obj = new manila($driver, $table_cfgs, $driver_cfgs);
 		return $obj;
+	}
+	
+	public static function migrate ( $old_config, $new_config )
+	{
+		$tmpname = tempnam("/tmp", "manila-migrate");
+		$old = manila::open($old_config);
+		$new = manila::open($new_config);
+		$tables = $old->list_tables();
+		foreach ($tables as $table)
+		{
+			echo "Migrating table: $table.";
+			$old->table($table)->export($tmpname);
+			echo ".";
+			$new->table($table)->import($tmpname);
+			echo ". done.\n";
+		}
+		unlink($tmpname);
+	}
+	
+	public function list_tables ()
+	{
+		return array_keys($this->table_config);
 	}
 	
 	public function &table ( $name )
@@ -186,7 +208,7 @@ class manila_table
 			$values = array_combine($fields, $row);
 			$key = $values[$keyfield];
 			unset($values[$keyfield]);
-			$this->driver->table_insert($this->name, $key, $values);
+			$this->driver->table_update($this->name, $key, $values);
 			foreach ($this->indices as $idx)
 			{
 				$this->driver->table_index_edit($this->name, $idx, $values[$idx], $key);

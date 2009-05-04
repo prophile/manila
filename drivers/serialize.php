@@ -58,6 +58,14 @@ class manila_driver_serialize extends manila_driver
 	public function __construct ( $driver_config, $table_config )
 	{
 		$this->root = $driver_config['directory'];
+		if (!file_exists($this->root))
+			mkdir($this->root);
+		foreach (array_keys($table_config) as $tbl)
+		{
+			$path = $this->root . "/$tbl";
+			if (!file_exists($path))
+				mkdir($path);
+		}
 	}
 	
 	public function table_list_keys ( $tname )
@@ -149,7 +157,7 @@ class manila_driver_serialize extends manila_driver
 	{
 		$khash = md5($key);
 		$path = $this->root . "/.meta.$khash";
-		return file_get_contents($path);
+		return file_exists($path) ? file_get_contents($path) : NULL;
 	}
 	
 	public function meta_write ( $key, $value )

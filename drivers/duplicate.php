@@ -16,7 +16,7 @@ class manila_driver_duplicate extends manila_driver
 	
 	private function select_child ()
 	{
-		return mt_rand(0, count($children) - 1);
+		return mt_rand(0, count($this->children) - 1);
 	}
 	
 	public function table_list_keys ( $tname )
@@ -115,15 +115,15 @@ class manila_driver_duplicate extends manila_driver
 			}
 		}
 		usort($occurrence_map, array('manila_driver_duplicate', 'occmap_compare'));
-		$selection = array_pop($occurrence_map);
-		$selected = $occurrence_map[array_random($occurrence_map)];
+		$selection = each($occurrence_map);
+		array_pop($occurrence_map);
 		$targets = array();
 		foreach ($occurrence_map as $list)
 		{
 			$targets = $targets + $list;
 		}
 		$fixers = $targets;
-		return $selected;
+		return $selection[0];
 	}
 	
 	private function table_heal ( $tname )
@@ -138,6 +138,7 @@ class manila_driver_duplicate extends manila_driver
 		$keylists = array_unique($keylists);
 		if (count($keylists) > 1)
 		{
+			printf("[DUPLICATE] Healing key list.\n");
 			// select best child, heal other children
 			$best = self::select_correct($keylists, $fixers);
 			$best =& $this->children[$best];
@@ -161,22 +162,23 @@ class manila_driver_duplicate extends manila_driver
 		}
 		else
 		{
-			$truelist = $this->children[$this->select_child()]->table_list_keys();
+			$truelist = $this->children[$this->select_child()]->table_list_keys($tname);
 		}
 		foreach ($truelist as $key)
 		{
 			$values = array();
-			foreach ($this->children as $key => &$child)
+			foreach ($this->children as $ckey => &$child)
 			{
-				$value = $child->table_list_keys($tname);
-				$values[$key] = serialize($value);
+				$value = $child->table_fetch($tname, $key);
+				$values[$ckey] = serialize($value);
 				unset($value);
 			}
 			$values = array_unique($values);
 			if (count($values) > 1)
 			{
+				printf("[DUPLICATE] Healing key %s\n", $key);
 				// select best child, heal other children
-				$best = self::select_correct($valuelists, $fixers);
+				$best = self::select_correct($values, $fixers);
 				$refvalues = unserialize($values[$best]);
 				foreach ($fixers as $fixer)
 				{
@@ -208,7 +210,7 @@ class manila_driver_duplicate extends manila_driver
 	{
 		foreach ($this->children as &$child)
 		{
-			$child->meta_write($child);
+			$child->meta_write($key, $value);
 		}
 	}
 }

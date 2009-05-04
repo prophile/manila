@@ -14,6 +14,7 @@ This driver uses APC to cache key lists and data.
 Parameters:
   child - sub-driver
   ttl - cache expire time in seconds, 0 = no expiry (default: 0)
+  prefix - prefix to add to all keys (default: none)
 
 === cache_local ===
 
@@ -21,6 +22,16 @@ This driver stores a local cache in memory of values, to avoid lookups for list_
 
 Parameters:
   child - sub-driver
+
+=== cache_memcache ===
+
+This driver uses APC to cache key lists and data.
+
+Parameters:
+  child - sub-driver
+  ttl - cache expire time in seconds, 0 = no expiry (default: 0)
+  prefix - prefix to add to all keys (default: none)
+  servers - one or a list of servers, in the form <host> (port) (persistent) (weight)
 
 === duplicate ===
 
@@ -35,6 +46,18 @@ Maps all calls to meta_read and meta_write, for backends which only implement a 
 
 Parameters:
   child - sub-driver
+  
+=== mysql ===
+
+This is a storage driver which stores data in a MySQL database.
+
+Parameters:
+  host - the host of the MySQL server
+  username - the username
+  password - i'm spotting a pattern here
+  database - name of the database to use
+  meta - whether or not to maintain a meta-table
+  keysub - substitute key field names, as pairs of table:keyname
 
 === logger ===
 

@@ -72,7 +72,7 @@ class manila_driver_read_ahead extends manila_driver
 		$this->readahead_table = $tname;
 		$this->readahead_base = $key;
 		$this->readahead_length = 0;
-		for ($i = 0; $i < $this->ideal_length)
+		for ($i = 0; $i < $this->ideal_length; $i++)
 		{
 			$k = $key + $i;
 			$row = $this->child->table_fetch($tname, $key + $i);

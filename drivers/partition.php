@@ -14,7 +14,7 @@ class manila_driver_partition extends manila_driver
 	
 	private function partition ( $key )
 	{
-		$crc = crc32((string)$key);
+		$crc = crc32((string)$key) & 0x7FFFFFFF;
 		return $crc % count($this->children);
 	}
 	
@@ -100,7 +100,7 @@ class manila_driver_partition extends manila_driver
 	public function meta_write ( $key, $value )
 	{
 		$part = $this->partition($key);
-		$this->children->meta_write($key, $value);
+		$this->children[$part]->meta_write($key, $value);
 	}
 }
 

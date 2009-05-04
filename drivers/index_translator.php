@@ -22,14 +22,14 @@ class manila_index
 		if ($value)
 			$this->dataset[md5((string)$key, true)] = $value;
 		else
-			@unset($this->dataset[md5((string)$key, true)]);
+			unset($this->dataset[md5((string)$key, true)]);
 		$this->dirty = true;
 	}
 	
 	public function get ( $key )
 	{
 		$k = md5((string)$key, true);
-		return isset($this->dataset[$k]) ? $this-dataset[$k] : NULL;
+		return isset($this->dataset[$k]) ? $this->dataset[$k] : NULL;
 	}
 	
 	public function was_changed ()
