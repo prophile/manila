@@ -14,6 +14,7 @@ class manila_driver_partition extends manila_driver
 	
 	private function partition ( $key )
 	{
+		if (is_integer($key)) $key = $key / 128; // exploit locality of reference
 		$crc = crc32((string)$key) & 0x7FFFFFFF;
 		return $crc % count($this->children);
 	}
