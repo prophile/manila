@@ -22,7 +22,7 @@ abstract class manila_driver_cache extends manila_driver
 		if (($cv = $this->cache_fetch($cachekey)) !== NULL)
 			return $cv;
 		$k = $this->child->table_list_keys($tname);
-		$this->cache_store($cachekey, $k, $this->ttl);
+		$this->cache_store($cachekey, $k);
 		return $k;
 	}
 	
@@ -46,7 +46,7 @@ abstract class manila_driver_cache extends manila_driver
 		$cachekey = "$tname:all-keys";
 		$this->cache_delete($cachekey);
 		$cachekey = "$tname:data:$key";
-		$this->cache_store($cachekey, $values, $this->ttl);
+		$this->cache_store($cachekey, $values);
 		$this->child->table_update($tname, $key, $values);
 	}
 	
@@ -71,7 +71,7 @@ abstract class manila_driver_cache extends manila_driver
 		if (($cv = $this->cache_fetch($cachekey)) !== NULL)
 			return $cv;
 		$v = $this->child->table_fetch($tname, $key);
-		$this->cache_store($cachekey, $v, $this->ttl);
+		$this->cache_store($cachekey, $v);
 		return $v;
 	}
 	

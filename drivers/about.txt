@@ -28,6 +28,13 @@ This driver duplicates data across several sub-drivers, and automatically heals 
 
 Parameters:
   child - array of sub-drivers
+  
+=== meta_map ===
+
+Maps all calls to meta_read and meta_write, for backends which only implement a key-value store for metadata.
+
+Parameters:
+  child - sub-driver
 
 === logger ===
 

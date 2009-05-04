@@ -1,23 +1,10 @@
 <?php
 
+require_once(MANILA_DRIVER_PATH . '/index_translator.php');
+
 class manila_driver_serialize extends manila_driver
 {
 	private $root;
-	private $fps = array();
-	
-	private static function md5lt ( $a, $b ) // a < b
-	{
-		for ($i = 0; $i < 16; $i++)
-		{
-			$ca = ord($a[$i]);
-			$cb = ord($b[$i]);
-			if ($ca < $cb)
-				return true;
-			elseif ($ca > $cb)
-				return false;
-		}
-		return false; // eq
-	}
 	
 	private static function rm ( $fileglob )
 	{
@@ -90,136 +77,21 @@ class manila_driver_serialize extends manila_driver
 		return file_exists($path);
 	}
 	
-	private function get_index_fp ( $tname, $field )
-	{
-		$path = $this->root . "/$tname/.index.$field";
-		if (isset($this->fps[$path]))
-			return $this->fps[$path];
-		if (!file_exists($path))
-			return NULL;
-		$fp = fopen($path, "r+");
-		$this->fps[$path] = $fp;
-		return $fp;
-	}
-	
-	private function read_i32 ( $fp )
-	{
-		$data = fread($fp, 4);
-		$data = unpack('Nvalue', $data);
-		return $data['value'];
-	}
-	
-	private function write_i32 ( $fp, $v )
-	{
-		$data = pack('N', $v);
-		fwrite($fp, $data);
-	}
 	
 	public function table_index_edit ( $tname, $field, $value, $key )
 	{
-		$fp = $this->get_index_fp($tname, $field);
-		if ($fp === NULL)
-		{
-			$fp = fopen($this->root . "/$tname/.index.$field", "w");
-			flock($fp, LOCK_EX);
-			$this->write_i32($fp, 1);
-			fwrite($fp, md5((string)$value, true));
-			$this->write_i32($fp, 24);
-			$d = serialize($key);
-			$this->write_i32($fp, strlen($d));
-			fwrite($fp, $d);
-			return;
-		}
-		flock($fp, LOCK_EX);
-		$hash = md5((string)$value, true);
-		fseek($fp, 0, SEEK_SET);
-		$count = $this->read_i32($fp);
-		$hashes = array();
-		for ($i = 0; $i < $count; $i++)
-		{
-			$h = fread($fp, 16);
-			$p = $this->read_i32($fp);
-			$hashes[$h] = $p;
-		}
-		$oldpos = ftell($fp);
-		fseek($fp, 0, SEEK_END);
-		$newpos = ftell($fp);
-		$datalen = $newpos - $oldpos;
-		fseek($fp, $oldpos, SEEK_SET);
-		$data = fread($fp, $datalen);
-		$padj = 0;
-		if ($key !== NULL)
-		{
-			if (isset($hashes[$hash]))
-				$padj = 0;
-			else
-				$padj = 20;
-			$psn = $datalen + 4 + (20 * (isset($hashes[$hash]) ? $count : $count + 1));
-			$hashes[$hash] = $psn - $padj;
-			$sv = serialize($key);
-			$data .= pack('N', strlen($sv));
-			$data .= $sv;
-		}
-		else
-		{
-			if (isset($hashes[$hash]))
-			{
-				$padj = -20;
-				unset($hashes[$hash]);
-			}
-			else
-			{
-				$padj = 0;
-			}
-		}
-		ksort($hashes);
-		ftruncate($fp, 0);
-		$this->write_i32($fp, count($hashes));
-		foreach ($hashes as $hash => $psn)
-		{
-			$psn += $padj;
-			fwrite($fp, $hash);
-			$this->write_i32($fp, $psn);
-		}
-		fwrite($fp, $data);
+		$path = $this->root . "/$tname/.index.$field";
+		$c = file_exists($path) ? new manila_index(file_get_contents($path)) : new manila_index();
+		$c->set($value, $key);
+		if ($c->was_changed())
+			file_put_contents($path, $c->to_data());
 	}
 	
 	public function table_index_lookup ( $tname, $field, $value )
 	{
-		$fp = $this->get_index_fp($tname, $field);
-		if ($fp === NULL)
-			return NULL;
-		flock($fp, LOCK_SH);
-		$hash = md5((string)$value, true);
-		fseek($fp, 0, SEEK_SET);
-		$count = $this->read_i32($fp);
-		$left = 0;
-		$right = $count - 1;
-		while ($left <= $right)
-		{
-			$mid = (($right-$left)/2)+$left;
-			// seek the value at mid
-			$loc = ($mid*20)+4;
-			fseek($fp, $loc, SEEK_SET);
-			$lhash = fread($fp, 16);
-			if ($lhash == $hash)
-			{
-				$position = $this->read_i32($loc);
-				fseek($fp, $position, SEEK_SET);
-				$datalen = $this->read_i32($fp);
-				$data = fread($fp, $datalen);
-				return unserialize($data);
-			}
-			else if (self::md5lt($lhash, $hash))
-			{
-				$right = $mid-1;
-			}
-			else
-			{
-				$left = $mid+1;
-			}
-		}
-		return NULL;
+		$path = $this->root . "/$tname/.index.$field";
+		$c = file_exists($path) ? new manila_index(file_get_contents($path)) : new manila_index();
+		return $c->get($value);
 	}
 	
 	public function table_insert ( $tname, $values )
@@ -269,56 +141,8 @@ class manila_driver_serialize extends manila_driver
 		return unserialize($content);
 	}
 	
-	private static function rebuild_index ( $path )
-	{
-		$fp = fopen($path, 'r');
-		flock($fp, LOCK_SH);
-		$count = $this->read_i32($fp);
-		$hashindices = array();
-		for ($i = 0; $i < $count; $i++)
-		{
-			$hash = fread($fp, 16);
-			$pos = $this->read_i32($fp);
-			$hashindices[$hash] = $pos;
-		}
-		$data = array();
-		foreach ($hashindices as $hash => $pos)
-		{
-			fseek($fp, $pos, SEEK_SET);
-			$len = $this->read_i32($fp);
-			$d = fread($fp, $len);
-			$data[$hash] = $d;
-		}
-		unset($hashindices);
-		fclose($fp);
-		ksort($hash);
-		$fp = fopen($path, 'w');
-		flock($fp, LOCK_EX);
-		$posn = 4 + (20 * count($data));
-		$this->write_i32($fp, count($data));
-		foreach ($data as $key => $value)
-		{
-			fwrite($fp, $key);
-			$this->write_i32($fp, $posn);
-			$posn += 4;
-			$posn += strlen($value);
-		}
-		reset($data);
-		foreach ($data as $key => $value)
-		{
-			$this->write_i32($fp, strlen($value));
-			fwrite($fp, $value);
-		}
-		fclose($fp);
-	}
-	
 	public function table_optimise ( $tname )
 	{
-		$list = glob($this->root . "/*/.index.*");
-		foreach ($list as $idx)
-		{
-			self::rebuild_index($path);
-		}
 	}
 	
 	public function meta_read ( $key )
