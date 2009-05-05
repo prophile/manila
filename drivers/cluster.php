@@ -210,7 +210,7 @@ class manila_driver_cluster extends manila_driver
 		if (!isset($kc[$key]))
 			return NULL;
 		$nodes = $this->select_nodes($key);
-		array_shuffle($nodes);
+		shuffle($nodes);
 		foreach ($nodes as $node)
 		{
 			$d = $this->children[$node]->table_fetch($tname, $key);
@@ -261,7 +261,7 @@ class manila_driver_cluster extends manila_driver
 		$node = $nodes[array_rand($nodes)];
 		$nodes = $this->select_nodes($key);
 		$possible_duffers = array();
-		array_shuffle($nodes);
+		shuffle($nodes);
 		foreach ($nodes as $node)
 		{
 			$d = $this->children[$node]->meta_read($key);

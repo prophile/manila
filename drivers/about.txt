@@ -33,6 +33,17 @@ Parameters:
   prefix - prefix to add to all keys (default: none)
   servers - one or a list of servers, in the form <host> (port) (persistent) (weight)
 
+=== cluster ===
+
+This driver shares data among multiple sub-drivers, and with a small degree of duplication of data, automatic healing, and other such buzzwords.
+
+Parameters:
+  unique_id - a unique name for this entry
+  fail_list - a file which stores a list of sub-nodes which have died
+  master - a sub-driver which stores indices and a DB of failing sub-drivers
+  duplication - the number of copies of each row to keep (default: 3)
+  children - an array of sub-drivers
+
 === duplicate ===
 
 This driver duplicates data across several sub-drivers, and automatically heals data on optimise.
