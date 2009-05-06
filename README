@@ -1,0 +1,61 @@
+     __  __             _ _       
+    |  \/  | __ _ _ __ (_) | __ _ 
+    | |\/| |/ _` | '_ \| | |/ _` |
+    | |  | | (_| | | | | | | (_| |
+    |_|  |_|\__,_|_| |_|_|_|\__,_|
+
+  A data engine for PHP.
+
+ Copyright (c) Alastair Lynn, 2009.
+
+== WHAT IS MANILA? ==
+
+Manila is, in a nutshell, an engine for storing your data in PHP. It acts as your backend database, your cache, your session storage, and any other data you want to keep.
+
+All your data is grouped into 'tables'. Each table has a key, and a set of fields, rather like a database table. Each table also consists of a set of records, stored associatively by key. The general pattern is that you look up your records by key. You can also specify indices, which act as reverse lookups on a table of values to keys.
+
+Behind the scenes, your data is powered by a chain of drivers which you set up. These drivers can do all sorts of things. The simplest example would be to use the mysql driver to store all your data in a MySQL database. The driver will set up all the tables for you, and you simply use the Manila API. If this began to prove slow, you could add in a Memcache cache driver which access a central cache before checking your DB. DB getting too big? No problem, set up several DB drivers and use the 'partition' driver to split your data between your databases. You can also use the 'splitter' driver to split your data so that different tables are managed by different DBs. For instance, you could have a 'session' table which you only want to store locally. You could just pass that off to an APC driver which will use APC caching to store the data and will have no real backing store. All this is configurable from one file, and your PHP code doesn't have to change at all.
+
+== HOW DO I USE MANILA? ==
+
+From the frontend, it couldn't be simpler.
+
+You open your Manila session with:
+
+$manila = manila::open('config/file/path.ini');
+
+And you access tables via $manila->tablename
+
+The table API is available via our online documentation, but here are some examples:
+
+Imagine that we have a table called 'contacts' which stores your personal address book. This is stored by an internal ID number, and has all each person's details in a field.
+
+To look up person 4, you'd simply use:
+
+$myFriend = $manila->contacts->fetch(4);
+
+Of course, you'd normally not remember people by their ID number, but by their name! This is where indices come in, which you use through the 'lookup' function:
+
+$id = $manila->contacts->lookup('name', 'John Smith');
+
+We now get the $id out, which is the key for that person!
+
+Now, imagine John Smith changes his address. First we fetch John's details:
+
+$john = $manila->contacts->fetch($id);
+
+Then, we change the address:
+
+$john['address'] = '2 Infinite Loop';
+
+Finally, we commit the change:
+
+$manila->contacts->edit($id, $john);
+
+Sadly, John gets hit by an enormous truck on his way home. No problem! We use:
+
+$manila->contacts->delete($id);
+
+To remove John from the list.
+
+Full documentation is available on our website!
