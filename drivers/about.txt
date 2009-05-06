@@ -42,7 +42,7 @@ Parameters:
   fail_list - a file which stores a list of sub-nodes which have died
   master - a sub-driver which stores indices and a DB of failing sub-drivers
   duplication - the number of copies of each row to keep (default: 3)
-  children - an array of sub-drivers
+  child - an array of sub-drivers
 
 === duplicate ===
 

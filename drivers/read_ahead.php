@@ -110,6 +110,11 @@ class manila_driver_read_ahead extends manila_driver
 	{
 		return $this->child->meta_read($key);
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return $this->child->meta_list($pattern);
+	}
 }
 
 ?>

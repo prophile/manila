@@ -132,6 +132,48 @@ abstract class manila_driver
 	abstract public function table_optimise ( $tname );
 	abstract public function meta_write ( $key, $value ); // key is a string, value is a string or NULL (= delete)
 	abstract public function meta_read ( $key );
+	abstract public function meta_list ( $pattern );
+	
+	protected static function fs_escape ( $key )
+	{
+		$newkey = '';
+		$len = strlen($key);
+		for ($i = 0; $i < $len; $i++)
+		{
+			$c = $key[$i];
+			$chr = ord($c);
+			if ($chr >= 97 && $chr <= 122)
+				$newkey .= $c;
+			elseif ($chr >= 48 && $chr <= 57)
+				$newkey .= $c;
+			else
+				$newkey .= sprintf('_%02x', $chr);
+		}
+		return $newkey;
+		// this is commented out due to a PHP bug at the time of writing, see git history for the rest of the implementations
+		//return preg_replace_callback('/[^a-z0-9]/', array('manila_driver', '__fs_escape_callback'), $key);
+	}
+	
+	protected static function fs_unescape ( $key )
+	{
+		$newkey = '';
+		$len = strlen($key);
+		for ($i = 0; $i < $len; $i++)
+		{
+			$c = $key[$i];
+			if ($c == '_')
+			{
+				$temp = $key[$i + 1] . $key[$i + 2];
+				$newkey .= chr(hexdec($temp));
+				$i += 2;
+			}
+			else
+			{
+				$newkey .= $c;
+			}
+		}
+		return $newkey;
+	}
 }
 
 class manila_table

@@ -74,13 +74,14 @@ class manila_driver_serialize extends manila_driver
 		$paths = glob($path . '/*.obj');
 		foreach ($paths as $key => $item)
 		{
-			$paths[$key] = str_replace(array($path . '/', '.obj'), array('', ''), $item);
+			$paths[$key] = manila_driver::fs_unescape(str_replace(array($path . '/', '.obj'), array('', ''), $item));
 		}
 		return $paths;
 	}
 	
 	public function table_key_exists ( $tname, $key )
 	{
+		$key = manila_driver::fs_escape($key);
 		$path = $this->root . "/$tname/$key.obj";
 		return file_exists($path);
 	}
@@ -88,6 +89,7 @@ class manila_driver_serialize extends manila_driver
 	
 	public function table_index_edit ( $tname, $field, $value, $key )
 	{
+		$field = manila_driver::fs_escape($field);
 		$path = $this->root . "/$tname/.index.$field";
 		$c = file_exists($path) ? new manila_index(file_get_contents($path)) : new manila_index();
 		$c->set($value, $key);
@@ -97,6 +99,7 @@ class manila_driver_serialize extends manila_driver
 	
 	public function table_index_lookup ( $tname, $field, $value )
 	{
+		$field = manila_driver::fs_escape($field);
 		$path = $this->root . "/$tname/.index.$field";
 		$c = file_exists($path) ? new manila_index(file_get_contents($path)) : new manila_index();
 		return $c->get($value);
@@ -122,6 +125,7 @@ class manila_driver_serialize extends manila_driver
 	
 	public function table_update ( $tname, $key, $values )
 	{
+		$key = manila_driver::fs_escape($key);
 		$data = serialize($values);
 		$path = $this->root . "/$tname/$key.obj";
 		file_put_contents($path, $data);
@@ -129,6 +133,7 @@ class manila_driver_serialize extends manila_driver
 	
 	public function table_delete ( $tname, $key )
 	{
+		$key = manila_driver::fs_escape($key);
 		$path = $this->root . "/$tname/$key.obj";
 		@unlink($path);
 	}
@@ -143,7 +148,9 @@ class manila_driver_serialize extends manila_driver
 	
 	public function table_fetch ( $tname, $key )
 	{
+		$key = manila_driver::fs_escape($key);
 		$path = $this->root . "/$tname/$key.obj";
+		if (!file_exists($path)) return NULL;
 		$content = @file_get_contents($path);
 		if (!$content) return NULL;
 		return unserialize($content);
@@ -155,15 +162,15 @@ class manila_driver_serialize extends manila_driver
 	
 	public function meta_read ( $key )
 	{
-		$khash = md5($key);
-		$path = $this->root . "/.meta.$khash";
+		$key = manila_driver::fs_escape($key);
+		$path = $this->root . "/.meta.$key";
 		return file_exists($path) ? file_get_contents($path) : NULL;
 	}
 	
 	public function meta_write ( $key, $value )
 	{
-		$khash = md5($key);
-		$path = $this->root . "/.meta.$khash";
+		$key = manila_driver::fs_escape($key);
+		$path = $this->root . "/.meta.$key";
 		if ($value === NULL && file_exists($path))
 		{
 			unlink($path);
@@ -172,6 +179,20 @@ class manila_driver_serialize extends manila_driver
 		{
 			file_put_contents($path, $value);
 		}
+	}
+	
+	public function meta_list ( $pattern )
+	{
+		$targs = array();
+		$files = glob($this->root . "/.meta.*");
+		foreach ($files as $file)
+		{
+			$file = str_replace($this->root . "/.meta.");
+			$file = manila_driver::fs_unescape($file);
+			if (fnmatch($pattern, $file))
+				$targs[] = $file;
+		}
+		return $targs;
 	}
 }
 

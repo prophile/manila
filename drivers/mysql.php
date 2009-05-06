@@ -258,7 +258,7 @@ class manila_driver_mysql extends manila_driver
 	{
 		if (!$this->meta) return NULL;
 		if (!$this->conn) $this->init();
-		$sql = sprintf("SELECT `value` FROM `__meta` WERE `key` = %s", self::encode($key));
+		$sql = sprintf("SELECT `value` FROM `__meta` WHERE `key` = %s", self::encode($key));
 		$result = $this->conn->query($sql);
 		$row = $result->fetch_assoc();
 		if ($row)
@@ -269,6 +269,20 @@ class manila_driver_mysql extends manila_driver
 		{
 			return NULL;
 		}
+	}
+	
+	public function meta_list ( $pattern )
+	{
+		$pattern = $this->conn->real_escape_string($pattern);
+		str_replace($pattern, '*', '%');
+		$sql = sprintf("SELECT `key` FROM `__meta` WHERE `key` LIKE '%s'", $pattern);
+		$result = $this->conn->query($sql);
+		$keys = array();
+		while ($row = $result->fetch_array())
+		{
+			$keys[] = $row[0];
+		}
+		return $keys;
 	}
 }
 

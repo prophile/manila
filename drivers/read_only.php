@@ -84,6 +84,11 @@ class manila_driver_read_only extends manila_driver
 	{
 		$this->violation();
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return $this->child->meta_list($pattern);
+	}
 }
 
 ?>

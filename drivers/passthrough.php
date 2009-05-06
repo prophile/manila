@@ -68,6 +68,11 @@ class manila_driver_passthrough
 	{
 		return $this->child->meta_read($key);
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return $this->child->meta_list($pattern);
+	}
 }
 
 ?>

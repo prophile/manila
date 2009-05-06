@@ -91,6 +91,11 @@ class manila_driver_splitter extends manila_driver
 	{
 		$this->targets['__meta']->meta_write($key, $value);
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return $this->targets['__meta']->meta_list($pattern);
+	}
 }
 
 ?>

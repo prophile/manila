@@ -103,6 +103,17 @@ class manila_driver_partition extends manila_driver
 		$part = $this->partition($key);
 		$this->children[$part]->meta_write($key, $value);
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		$list = array();
+		foreach ($this->children as &$child)
+		{
+			$arr = $child->meta_list($pattern);
+			$list = array_merge($list, $arr);
+		}
+		return $list;
+	}
 }
 
 ?>

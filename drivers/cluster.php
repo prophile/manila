@@ -25,67 +25,30 @@ class manila_driver_cluster extends manila_driver
 	private $nodes = array(); // hash => name
 	private $node_keys = array(); // sorted array of hash
 	
-	private $localchild; // responsible for all indices and key lists and the fail DB, not data nor meta
-	
-	private $duffers = array();
-	private $failures = array();
+	private $localchild; // responsible for all indices and key lists, not data nor metadata
 	
 	private $unique_id;
 	
 	private $duplication = 3;
 	
-	private function update_failure_db ()
-	{
-		$this->localchild->meta_write($this->unique_id . '_fail', serialize($this->failures));
-		$this->localchild->meta_write($this->unique_id . '_duff', serialize($this->duffers));
-	}
-	
-	private function read_failure_db ()
-	{
-		$this->duffers = unserialize($this->localchild->meta_read($this->unique_id . '_duff'));
-		$this->failures = unserialize($this->localchild->meta_read($this->unique_id . '_fail'));
-	}
-	
-	private function mark_bad ( $node )
-	{
-		if (isset($this->duffers[$node]))
-		{
-			$this->failures[] = $node;
-			unset($this->duffers[$node]);
-			$hash = $this->hash($node);
-			unset($this->children[$node]);
-			unset($this->nodes[$hash]);
-			$fp = fopen($this->faillist, 'a');
-			fwrite($fp, "$node\n");
-			fclose($fp);
-			$this->update_failure_db();
-			foreach ($this->node_keys as $k => $v)
-			{
-				if ($v == $node)
-				{
-					unset($this->node_keys[$k]);
-					return;
-				}
-			}
-		}
-		else
-		{
-			$this->duffers[$node] = $node;
-			$this->update_failure_db();
-		}
-	}
-	
 	private function get_node ( $n )
 	{
 		// select first hash < $n
 		// this uses a linear search, plan is to upgrade to a binary search
-		$wv = 0x7FFFFFFF;
+		$wv = min($this->node_keys);
 		foreach ($this->node_keys as $k)
 		{
 			if ($k > $n)
-				return $wv;
+			{
+				$node = $this->nodes[$k];
+				if ($wv == 0x7FFFFFFF)
+					die("[CLUSTER] Bad WV in get_node loop, k=$k($node) n=$n\n");
+				return $this->nodes[$wv];
+			}
 			$wv = $k;
 		}
+		if ($wv == 0x7FFFFFFF)
+			die("[CLUSTER] Bad WV in get_node loop, k=$k n=$n\n");
 		return $this->nodes[$wv];
 	}
 	
@@ -95,11 +58,12 @@ class manila_driver_cluster extends manila_driver
 		$hash = $this->hash($key);
 		mt_srand($hash);
 		$nodes = array();
-		for ($i = 0; $i < $count; $i++)
+		while (count($nodes) < $count)
 		{
 			$val = mt_rand() % 0x7FFFFFFF;
 			$node = $this->get_node($val);
-			$nodes[] = $node;
+			if (!in_array($node, $nodes))
+				$nodes[] = $node;
 		}
 		return $nodes;
 	}
@@ -107,16 +71,12 @@ class manila_driver_cluster extends manila_driver
 	public function __construct ( $driver_config, $table_config )
 	{
 		$this->unique_id = $driver_config['unique_id'];
-		$this->faillist = $driver_config['fail_list'];
 		$this->localchild = manila::get_driver($driver_config['master']);
-		$this->read_failure_db();
 		if (isset($driver_config['duplication']))
 			$this->duplication = $driver_config['duplication'];
-		$subnodes = (array)$driver_config['children'];
+		$subnodes = (array)$driver_config['child'];
 		foreach ($subnodes as $child)
 		{
-			if (isset($this->failures[$child]))
-				continue;
 			$hash = $this->hash($child);
 			$this->children[$child] = manila::get_driver($child);
 			$this->nodes[$hash] = $child;
@@ -141,7 +101,7 @@ class manila_driver_cluster extends manila_driver
 		$key = $this->unique_id . "_$tname" . "_keys";
 		if (!isset($this->keycaches[$tname]))
 		{
-			$d = $this->child->meta_read($key);
+			$d = $this->localchild->meta_read($key);
 			$this->keycaches[$tname] = ($d !== NULL) ? unserialize($d) : array();
 		}
 		return $this->keycaches[$tname];
@@ -149,7 +109,7 @@ class manila_driver_cluster extends manila_driver
 	
 	public function table_list_keys ( $tname )
 	{
-		return $this->get_keycache($tname);
+		return array_keys($this->get_keycache($tname));
 	}
 	
 	public function table_key_exists ( $tname, $key )
@@ -201,7 +161,7 @@ class manila_driver_cluster extends manila_driver
 		}
 		$this->localchild->table_truncate($tname);
 		$this->keycaches[$tname] = array();
-		$this->push_keycache_changes();
+		$this->push_keycache_changes($tname);
 	}
 	
 	public function table_fetch ( $tname, $key )
@@ -211,15 +171,21 @@ class manila_driver_cluster extends manila_driver
 			return NULL;
 		$nodes = $this->select_nodes($key);
 		shuffle($nodes);
+		$duffers = array();
 		foreach ($nodes as $node)
 		{
 			$d = $this->children[$node]->table_fetch($tname, $key);
 			if ($d === NULL)
 			{
-				$this->mark_bad($node);
+				$duffers[] = $node;
 			}
 			else
 			{
+				foreach ($duffers as $duffer)
+				{
+					echo "[CLUSTER] Healed key $key in table $tname on sub-driver $duffer\n";
+					$this->children[$duffer]->table_update($tname, $key, $d);
+				}
 				return $d;
 			}
 		}
@@ -260,25 +226,36 @@ class manila_driver_cluster extends manila_driver
 		$nodes = $this->select_nodes($key);
 		$node = $nodes[array_rand($nodes)];
 		$nodes = $this->select_nodes($key);
-		$possible_duffers = array();
+		$duffers = array();
 		shuffle($nodes);
 		foreach ($nodes as $node)
 		{
 			$d = $this->children[$node]->meta_read($key);
 			if ($d === NULL)
 			{
-				$possible_duffers[] = $node;
+				$duffers[] = $node;
 			}
 			else
 			{
-				foreach ($possible_duffers as $pd)
+				foreach ($duffers as $duffer)
 				{
-					$this->mark_bad($pd);
+					$this->children[$duffer]->meta_write($key, $d);
 				}
 				return $d;
 			}
 		}
 		return NULL;
+	}
+	
+	public function meta_list ( $pattern )
+	{
+		$list = array();
+		foreach ($this->children as &$child)
+		{
+			$arr = $child->meta_list($pattern);
+			$list = array_merge($list, $arr);
+		}
+		return array_unique($list);
 	}
 }
 

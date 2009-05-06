@@ -116,6 +116,15 @@ class manila_driver_logger extends manila_driver
 		$this->child->meta_write($key, $value);
 		echo $msg;
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		$msg = sprintf("[LOGGER(%s)] MetaList(%s)", get_class($this->child), $pattern);
+		$rv = $this->child->meta_list($pattern);
+		$msg .= sprintf(" = '%s'\n", $rv);
+		echo $msg;
+		return $rv;
+	}
 }
 
 ?>

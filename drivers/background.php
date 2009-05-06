@@ -108,6 +108,11 @@ class manila_driver_background extends manila_driver
 		// meta writes are so trivial there is no point backgrounding
 		$this->child->meta_write($key, $value);
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return $this->child->meta_list($pattern);
+	}
 }
 
 ?>

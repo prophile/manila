@@ -192,6 +192,11 @@ class manila_driver_sqlite extends manila_driver
 			return NULL;
 		}
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return array(); // not yet implemented
+	}
 }
 
 ?>

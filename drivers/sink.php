@@ -59,6 +59,11 @@ class manila_driver_sink extends manila_driver
 	{
 		return NULL;
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return array();
+	}
 }
 
 ?>

@@ -113,6 +113,11 @@ abstract class manila_driver_cache extends manila_driver
 		$this->cache_store($cachekey, $val);
 		return $val;
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		return $this->child->meta_list($pattern); // no caching... yet
+	}
 }
 
 ?>

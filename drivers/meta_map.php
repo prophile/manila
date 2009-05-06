@@ -125,6 +125,16 @@ class manila_driver_meta_map extends manila_driver
 	{
 		return $this->child->meta_read("__meta:$key");
 	}
+	
+	public function meta_list ( $pattern )
+	{
+		$keys = $this->child->meta_list("__meta:$pattern");
+		foreach ($keys as $key => $value)
+		{
+			$keys[$key] = substr($value, 7);
+		}
+		return $keys;
+	}
 }
 
 ?>
