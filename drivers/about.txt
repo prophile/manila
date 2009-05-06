@@ -44,7 +44,7 @@ Parameters:
   duplication - the number of copies of each row to keep (default: 3)
   child - an array of sub-drivers
 
-=== duplicate ===
+=== replicate ===
 
 This driver duplicates data across several sub-drivers, and automatically heals data on optimise.
 

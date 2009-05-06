@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_duplicate extends manila_driver
+class manila_driver_replicate extends manila_driver
 {
 	private $children = array();
 	private $table_list;
@@ -114,7 +114,7 @@ class manila_driver_duplicate extends manila_driver
 				$occurrence_map[$value][] = $key;
 			}
 		}
-		usort($occurrence_map, array('manila_driver_duplicate', 'occmap_compare'));
+		usort($occurrence_map, array('manila_driver_replicate', 'occmap_compare'));
 		$selection = each($occurrence_map);
 		array_pop($occurrence_map);
 		$targets = array();
