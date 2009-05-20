@@ -19,7 +19,7 @@ class manila_driver_read_ahead extends manila_driver implements manila_interface
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child'], array('tables'));
+		$this->child = manila::get_driver($driver_config['child'], $table_config, array('tables'));
 		if (isset($driver_config['length']))
 			$this->ideal_length = $driver_config['length'];
 	}

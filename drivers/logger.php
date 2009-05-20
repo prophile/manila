@@ -15,7 +15,7 @@ class manila_driver_logger extends manila_driver implements manila_interface_met
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$child = manila::get_driver($driver_config['child']);
+		$child = manila::get_driver($driver_config['child'], $table_config);
 		$this->child = $child;
 		$msg = sprintf("[LOGGER(%s)] Started\n", get_class($child));
 		echo $msg;

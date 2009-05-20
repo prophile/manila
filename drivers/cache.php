@@ -12,8 +12,14 @@ abstract class manila_driver_cache extends manila_driver implements manila_inter
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child'], array('meta', 'tables', 'tables_serial'));
+		$this->child = manila::get_driver($driver_config['child'], $table_config, array('meta', 'tables'));
 		$this->cache_init($driver_config);
+	}
+	
+	public function conforms ( $interface )
+	{
+		if ($interface == 'tables_serial') return $this->child->conforms('tables_serial');
+		return parent::conforms($interface);
 	}
 	
 	public function table_list_keys ( $tname )

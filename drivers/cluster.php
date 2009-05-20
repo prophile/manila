@@ -71,14 +71,14 @@ class manila_driver_cluster extends manila_driver implements manila_interface_me
 	public function __construct ( $driver_config, $table_config )
 	{
 		$this->unique_id = $driver_config['unique_id'];
-		$this->localchild = manila::get_driver($driver_config['master'], array('meta'));
+		$this->localchild = manila::get_driver($driver_config['master'], array(),  array('meta'));
 		if (isset($driver_config['duplication']))
 			$this->duplication = $driver_config['duplication'];
 		$subnodes = (array)$driver_config['child'];
 		foreach ($subnodes as $child)
 		{
 			$hash = $this->hash($child);
-			$this->children[$child] = manila::get_driver($child, array('tables', 'meta'));
+			$this->children[$child] = manila::get_driver($child, $table_config, array('tables', 'meta'));
 			$this->nodes[$hash] = $child;
 			$this->node_keys[] = $hash;
 		}

@@ -9,7 +9,7 @@ class manila_driver_meta_map extends manila_driver implements manila_interface_m
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child'], array('meta'));
+		$this->child = manila::get_driver($driver_config['child'], array(), array('meta'));
 		$this->tableconf = $table_config;
 	}
 	

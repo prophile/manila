@@ -7,7 +7,7 @@ class manila_driver_background extends manila_driver implements manila_interface
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child'], array('meta', 'tables'));
+		$this->child = manila::get_driver($driver_config['child'], $table_config, array('meta', 'tables'));
 	}
 	
 	public function conforms ( $interface )

@@ -28,13 +28,12 @@ class manila
 	}
 	
 	private static $global_driver_config = array();
-	private static $global_table_config = array();
 	
-	public static function get_driver ( $id, $required_interfaces = array() ) // this is for driver use only
+	public static function get_driver ( $id, $tableconf, $required_interfaces = array() ) // this is for driver use only
 	{
 		$cfg = self::$global_driver_config[$id];
 		$obj = self::load_driver($cfg['driver']);
-		$driver = new $obj($cfg, self::$global_table_config);
+		$driver = new $obj($cfg, $tableconf);
 		foreach ($required_interfaces as $ri)
 		{
 			if (!$driver->conforms($ri))
@@ -61,10 +60,8 @@ class manila
 			}
 		}
 		self::$global_driver_config = $driver_cfgs;
-		self::$global_table_config = $table_cfgs;
-		$driver = self::get_driver("master", array("meta", "tables", "tables_serial"));
+		$driver = self::get_driver("master", $table_cfgs, array("meta", "tables", "tables_serial"));
 		self::$global_driver_config = array();
-		self::$global_table_config = array();
 		$obj = new manila($driver, $table_cfgs, $driver_cfgs);
 		return $obj;
 	}

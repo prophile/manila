@@ -6,7 +6,7 @@ class manila_driver_passthrough implements manila_interface_meta, manila_interfa
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child']);
+		$this->child = manila::get_driver($driver_config['child'], $table_config);
 	}
 	
 	public function conforms ( $interface )

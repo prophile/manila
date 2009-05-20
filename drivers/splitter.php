@@ -11,7 +11,7 @@ class manila_driver_splitter extends manila_driver implements manila_interface_m
 		$patterns = array();
 		foreach ($driver_config as $pattern => $target)
 		{
-			$patterns[$pattern] = manila::get_driver($target);
+			$patterns[$pattern] = manila::get_driver($target, $table_config);
 		}
 		$tables[] = '__meta';
 		foreach ($tables as $table)

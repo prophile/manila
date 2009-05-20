@@ -9,7 +9,7 @@ class manila_driver_read_only extends manila_driver implements manila_interface_
 	{
 		if (isset($driver_config['strict']))
 			$this->strict = $driver_config[$strict];
-		$this->child = manila::get_driver($driver_config['child']);
+		$this->child = manila::get_driver($driver_config['child'], $table_config);
 	}
 	
 	private function violation ()

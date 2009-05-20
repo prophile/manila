@@ -9,7 +9,7 @@ class manila_driver_replicate extends manila_driver implements manila_interface_
 	{
 		foreach ($driver_config['child'] as $child)
 		{
-			$this->children[] = manila::get_driver($child, array('meta', 'tables', 'tables_serial'));
+			$this->children[] = manila::get_driver($child, $table_config, array('meta', 'tables', 'tables_serial'));
 		}
 		$this->table_list = array_keys($table_config);
 	}
