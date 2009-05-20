@@ -44,7 +44,8 @@ function gzdecode($data)
 
 	$filenamelen = 0; 
 	$filename = ""; 
-	if ($flags & 8) { 
+	if ($flags & 8)
+	{ 
 		// C-style string file NAME data in header 
 		if ($len - $headerlen - 1 < 8)
 		{ 
@@ -61,7 +62,8 @@ function gzdecode($data)
 
 	$commentlen = 0; 
 	$comment = ""; 
-	if ($flags & 16) { 
+	if ($flags & 16)
+	{ 
 		// C-style string COMMENT data in header 
 		if ($len - $headerlen - 1 < 8)
 		{ 
@@ -77,7 +79,8 @@ function gzdecode($data)
 	} 
 
 	$headercrc = ""; 
-	if ($flags & 1) { 
+	if ($flags & 1)
+	{ 
 		// 2-bytes (lowest order) of CRC32 on header present 
 		if ($len - $headerlen - 2 < 8)
 		{ 
