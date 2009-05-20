@@ -6,7 +6,7 @@ class manila_driver_fs_posix extends manila_driver implements manila_interface_f
 	
 	private static function mkdir_recursive ( $dir )
 	{
-		mkdir($dir, 0777, true);
+		@mkdir($dir, 0777, true);
 	}
 	
 	public function __construct ( $driver_config, $table_config )

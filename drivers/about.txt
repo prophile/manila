@@ -1,12 +1,5 @@
 This is a list of available manila drivers.
 
-=== background ===
-
-Use PCNTL to fork and do some tasks asynchronously in the background.
-
-Parameters:
-  child - sub-driver
-
 === cache_apc ===
 
 This driver uses APC to cache key lists and data.
@@ -50,14 +43,30 @@ This driver duplicates data across several sub-drivers, and automatically heals 
 
 Parameters:
   child - array of sub-drivers
-  
-=== meta_map ===
 
-Maps all calls to meta_read and meta_write, for backends which only implement a key-value store for metadata.
+=== fs_encrypt_aes ===
+
+This driver encrypts filesystem calls using AES-256 encryption in CBC mode.
 
 Parameters:
-  child - sub-driver
-  
+  child - the sub-driver
+  password - the encryption password
+
+=== fs_compress_zlib ===
+
+This driver compresses filesystem data using zlib.
+
+Parameters:
+  child - the sub-driver
+  level - the compression level, 1-9, 1 is fastest, 9 is strongest.
+
+=== fs_posix ===
+
+This filesystem driver maps calls to the appropriate POSIX filesystem calls.
+
+Parameters:
+  root - the location on the filesystem
+
 === mysql ===
 
 This is a storage driver which stores data in a MySQL database.
@@ -91,14 +100,6 @@ This driver redirects calls to a sub-driver.
 Parameters:
   child - sub-driver
 
-=== read_ahead ===
-
-This driver reads blocks of numeric keys for faster access.
-
-Parameters:
-  child - sub-driver
-  length - block size to read (default: 30)
-
 === read_only ===
 
 This driver makes the underlying storage read-only.
@@ -109,10 +110,10 @@ Parameters:
 
 === serialize ===
 
-This is a basic storage driver which stores data on the filesystem.
+This system maps table accesses and meta accesses to filesystem calls.
 
 Parameters:
-  directory - the path to the (already existing) directory to use
+  child - the filesystem sub-driver
 
 === sink ===
 

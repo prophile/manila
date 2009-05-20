@@ -8,7 +8,7 @@ class manila_driver_serialize extends manila_driver implements manila_interface_
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver('child', array(), array('filesystem'));
+		$this->child = manila::get_driver($driver_config['child'], array(), array('filesystem'));
 	}
 	
 	public function table_list_keys ( $tname )

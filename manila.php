@@ -31,6 +31,8 @@ class manila
 	
 	public static function get_driver ( $id, $tableconf, $required_interfaces = array() ) // this is for driver use only
 	{
+		if (!isset(self::$global_driver_config[$id]))
+			debug_print_backtrace();
 		$cfg = self::$global_driver_config[$id];
 		$obj = self::load_driver($cfg['driver']);
 		$driver = new $obj($cfg, $tableconf);
