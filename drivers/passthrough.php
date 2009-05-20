@@ -1,12 +1,23 @@
 <?php
 
-class manila_driver_passthrough
+class manila_driver_passthrough implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	private $child;
 	
 	public function __construct ( $driver_config, $table_config )
 	{
 		$this->child = manila::get_driver($driver_config['child']);
+	}
+	
+	public function conforms ( $interface )
+	{
+		if ($interface == 'meta')
+			return $this->child->conforms('meta');
+		elseif ($interface == 'tables')
+			return $this->child->conforms('tables');
+		elseif ($interface == 'tables_serial')
+			return $this->child->conforms('tables_serial');
+		else return parent::conforms($interface);
 	}
 	
 	public function table_list_keys ( $tname )

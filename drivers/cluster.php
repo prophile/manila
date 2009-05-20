@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_cluster extends manila_driver
+class manila_driver_cluster extends manila_driver implements manila_interface_meta, manila_interface_tables
 {
 	private function hash ( $key ) // returns a 31-bit hash
 	{
@@ -71,14 +71,14 @@ class manila_driver_cluster extends manila_driver
 	public function __construct ( $driver_config, $table_config )
 	{
 		$this->unique_id = $driver_config['unique_id'];
-		$this->localchild = manila::get_driver($driver_config['master']);
+		$this->localchild = manila::get_driver($driver_config['master'], array('meta'));
 		if (isset($driver_config['duplication']))
 			$this->duplication = $driver_config['duplication'];
 		$subnodes = (array)$driver_config['child'];
 		foreach ($subnodes as $child)
 		{
 			$hash = $this->hash($child);
-			$this->children[$child] = manila::get_driver($child);
+			$this->children[$child] = manila::get_driver($child, array('tables', 'meta'));
 			$this->nodes[$hash] = $child;
 			$this->node_keys[] = $hash;
 		}
@@ -120,7 +120,6 @@ class manila_driver_cluster extends manila_driver
 	
 	public function table_insert ( $tname, $values )
 	{
-		die("[CLUSTER] unable to use serial tables.\n");
 	}
 	
 	public function table_update ( $tname, $key, $values )

@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_partition extends manila_driver
+class manila_driver_partition extends manila_driver implements manila_interface_meta, manila_interface_tables
 {
 	private $children = array();
 	
@@ -8,7 +8,7 @@ class manila_driver_partition extends manila_driver
 	{
 		foreach ($driver_config['child'] as $child)
 		{
-			$this->children[] = manila::get_driver($child);
+			$this->children[] = manila::get_driver($child, array('meta', 'tables'));
 		}
 	}
 	
@@ -34,11 +34,6 @@ class manila_driver_partition extends manila_driver
 	{
 		$part = $this->partition($key);
 		return $this->children[$part]->table_key_exists($tname, $key);
-	}
-	
-	public function table_insert ( $tname, $values )
-	{
-		die("Unable to partition driver with serial keys.\n");
 	}
 	
 	public function table_update ( $tname, $key, $values )

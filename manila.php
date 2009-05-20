@@ -1,6 +1,9 @@
 <?php
 
+define('MANILA_INCLUDE_PATH', str_replace('/manila.php', '', __FILE__) . '/include');
 define('MANILA_DRIVER_PATH', str_replace('/manila.php', '', __FILE__) . '/drivers');
+
+require_once(MANILA_INCLUDE_PATH . '/driver.php');
 
 class manila
 {
@@ -27,11 +30,16 @@ class manila
 	private static $global_driver_config = array();
 	private static $global_table_config = array();
 	
-	public static function get_driver ( $id ) // this is for driver use only
+	public static function get_driver ( $id, $required_interfaces = array() ) // this is for driver use only
 	{
 		$cfg = self::$global_driver_config[$id];
 		$obj = self::load_driver($cfg['driver']);
 		$driver = new $obj($cfg, self::$global_table_config);
+		foreach ($required_interfaces as $ri)
+		{
+			if (!$driver->conforms($ri))
+				return NULL;
+		}
 		return $driver;
 	}
 	
@@ -54,7 +62,7 @@ class manila
 		}
 		self::$global_driver_config = $driver_cfgs;
 		self::$global_table_config = $table_cfgs;
-		$driver = self::get_driver("master");
+		$driver = self::get_driver("master", array("meta", "tables", "tables_serial"));
 		self::$global_driver_config = array();
 		self::$global_table_config = array();
 		$obj = new manila($driver, $table_cfgs, $driver_cfgs);
@@ -114,65 +122,6 @@ class manila
 	{
 		$metakey = "user:$meta";
 		$this->driver->meta_write($metakey, (string)$value);
-	}
-}
-
-abstract class manila_driver
-{
-	abstract public function __construct ( $driver_config, $table_config );
-	abstract public function table_list_keys ( $tname );
-	abstract public function table_key_exists ( $tname, $key );
-	abstract public function table_insert ( $tname, $values ); // return key, this only used for serial keys
-	abstract public function table_update ( $tname, $key, $values );
-	abstract public function table_delete ( $tname, $key );
-	abstract public function table_truncate ( $tname ); // includes flushing any indices
-	abstract public function table_fetch ( $tname, $key );
-	abstract public function table_index_edit ( $tname, $field, $value, $key );
-	abstract public function table_index_lookup ( $tname, $field, $value );
-	abstract public function table_optimise ( $tname );
-	abstract public function meta_write ( $key, $value ); // key is a string, value is a string or NULL (= delete)
-	abstract public function meta_read ( $key );
-	abstract public function meta_list ( $pattern );
-	
-	protected static function fs_escape ( $key )
-	{
-		$newkey = '';
-		$len = strlen($key);
-		for ($i = 0; $i < $len; $i++)
-		{
-			$c = $key[$i];
-			$chr = ord($c);
-			if ($chr >= 97 && $chr <= 122)
-				$newkey .= $c;
-			elseif ($chr >= 48 && $chr <= 57)
-				$newkey .= $c;
-			else
-				$newkey .= sprintf('_%02x', $chr);
-		}
-		return $newkey;
-		// this is commented out due to a PHP bug at the time of writing, see git history for the rest of the implementations
-		//return preg_replace_callback('/[^a-z0-9]/', array('manila_driver', '__fs_escape_callback'), $key);
-	}
-	
-	protected static function fs_unescape ( $key )
-	{
-		$newkey = '';
-		$len = strlen($key);
-		for ($i = 0; $i < $len; $i++)
-		{
-			$c = $key[$i];
-			if ($c == '_')
-			{
-				$temp = $key[$i + 1] . $key[$i + 2];
-				$newkey .= chr(hexdec($temp));
-				$i += 2;
-			}
-			else
-			{
-				$newkey .= $c;
-			}
-		}
-		return $newkey;
 	}
 }
 

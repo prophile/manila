@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_read_ahead extends manila_driver
+class manila_driver_read_ahead extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	private $child;
 	private $readahead_table = NULL;
@@ -19,9 +19,15 @@ class manila_driver_read_ahead extends manila_driver
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child']);
+		$this->child = manila::get_driver($driver_config['child'], array('tables'));
 		if (isset($driver_config['length']))
 			$this->ideal_length = $driver_config['length'];
+	}
+	
+	public function conforms ( $interface )
+	{
+		if ($interface == 'meta') return $this->child->conforms('meta');
+		else return parent::conforms($interface);
 	}
 	
 	public function table_list_keys ( $tname )

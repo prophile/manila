@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_replicate extends manila_driver
+class manila_driver_replicate extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	private $children = array();
 	private $table_list;
@@ -9,7 +9,7 @@ class manila_driver_replicate extends manila_driver
 	{
 		foreach ($driver_config['child'] as $child)
 		{
-			$this->children[] = manila::get_driver($child);
+			$this->children[] = manila::get_driver($child, array('meta', 'tables', 'tables_serial'));
 		}
 		$this->table_list = array_keys($table_config);
 	}

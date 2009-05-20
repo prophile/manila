@@ -2,7 +2,7 @@
 
 require_once(MANILA_DRIVER_PATH . '/index_translator.php');
 
-class manila_driver_serialize extends manila_driver
+class manila_driver_serialize extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	private $root;
 	

@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_read_only extends manila_driver
+class manila_driver_read_only extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	private $strict = false;
 	private $child;

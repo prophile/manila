@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_sink extends manila_driver
+class manila_driver_sink extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	public function __construct ( $driver_config, $table_config )
 	{

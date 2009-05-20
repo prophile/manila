@@ -1,6 +1,6 @@
 <?php
 
-abstract class manila_driver_cache extends manila_driver
+abstract class manila_driver_cache extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
 {
 	private $child = false;
 	
@@ -12,7 +12,7 @@ abstract class manila_driver_cache extends manila_driver
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child']);
+		$this->child = manila::get_driver($driver_config['child'], array('meta', 'tables', 'tables_serial'));
 		$this->cache_init($driver_config);
 	}
 	
