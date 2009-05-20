@@ -3,6 +3,7 @@
 require_once(MANILA_INCLUDE_PATH . '/interface_meta.php');
 require_once(MANILA_INCLUDE_PATH . '/interface_tables.php');
 require_once(MANILA_INCLUDE_PATH . '/interface_tables_serial.php');
+require_once(MANILA_INCLUDE_PATH . '/interface_filesystem.php');
 
 abstract class manila_driver
 {
