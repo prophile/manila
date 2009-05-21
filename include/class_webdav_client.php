@@ -339,7 +339,7 @@ class webdav_client {
 		// send header
 		$this->_send_request();
 		// send the rest (data)
-		fputs($this->_fp, $data);
+		fwrite($this->_fp, $data);
 		$this->_get_respond();
 		$response = $this->_process_respond();
 
@@ -1051,6 +1051,8 @@ class webdav_client {
 		// lower XML Names... maybe break a RFC, don't know ...
 
 		$propname = strtolower($name);
+		if (!isset($this->_xmltree[$parser]))
+			$this->_xmltree[$parser] = '';
 		$this->_xmltree[$parser] .= $propname . '_';
 		
 		// translate xml tree to a flat array ...
@@ -1283,7 +1285,8 @@ class webdav_client {
 		$this->_header_add(sprintf('Host: %s', $this->_server));
 		// $request .= sprintf('Connection: Keep-Alive');
 		$this->_header_add(sprintf('User-Agent: %s', $this->_user_agent));
-		$this->_header_add(sprintf('Authorization: Basic %s', base64_encode("$this->_user:$this->_pass")));
+		if ($this->_user != '')
+			$this->_header_add(sprintf('Authorization: Basic %s', base64_encode("$this->_user:$this->_pass")));
 	}
 
  /**
@@ -1371,7 +1374,7 @@ class webdav_client {
 						}
 					} while ($byte!="\r" and strlen($byte)>0);      // till we match the Carriage Return
 					fread($this->_fp, 1);                           // also drop off the Line Feed
-					$chunk_size=hexdec($chunk_size);                // convert to a number in decimal system
+					$chunk_size=(int)hexdec($chunk_size);                // convert to a number in decimal system
 					if ($chunk_size > 0) {
 						$buffer .= fread($this->_fp,$chunk_size);
 					}
@@ -1463,7 +1466,7 @@ class webdav_client {
 				list($fieldname, $fieldvalue) = explode(':', $lines[$i]);
 				// check if this header was allready set (apache 2.0 webdav module does this....).
 				// If so we add the the value to the end the fieldvalue, separated by comma...
-				if (! $ret_struct['header'][$fieldname]) {
+				if (empty($ret_struct['header'][$fieldname])) {
 					$ret_struct['header'][$fieldname] = trim($fieldvalue);
 				} else {
 				 $ret_struct['header'][$fieldname] .= ',' . trim($fieldvalue);
