@@ -1,6 +1,6 @@
 <?php
 
-abstract class manila_driver_cache extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
+abstract class manila_driver_cache extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial, manila_interface_filesystem
 {
 	private $child = false;
 	
@@ -12,13 +12,14 @@ abstract class manila_driver_cache extends manila_driver implements manila_inter
 	
 	public function __construct ( $driver_config, $table_config )
 	{
-		$this->child = manila::get_driver($driver_config['child'], $table_config, array('meta', 'tables'));
+		$this->child = manila::get_driver($driver_config['child'], $table_config);
 		$this->cache_init($driver_config);
 	}
 	
 	public function conforms ( $interface )
 	{
 		if ($interface == 'tables_serial') return $this->child->conforms('tables_serial');
+		if ($interface == 'filesystem') return $this->child->conforms('filesystem');
 		return parent::conforms($interface);
 	}
 	
@@ -123,6 +124,79 @@ abstract class manila_driver_cache extends manila_driver implements manila_inter
 	public function meta_list ( $pattern )
 	{
 		return $this->child->meta_list($pattern); // no caching... yet
+	}
+	
+	public function file_exists ( $path )
+	{
+		$dir = dirname($path);
+		$base = basename($path);
+		$cachekey = "__files:index:$dir";
+		if (($cv = $this->cache_fetch($cachekey)) === NULL)
+		{
+			$cv = array_fill_keys($this->child->file_directory_list($dir), true);
+			$this->cache_store($cachekey, $cv);
+		}
+		return isset($cv[$base]);
+	}
+	
+	public function file_read ( $path )
+	{
+		$cachekey = "__files:content:$path";
+		if (($cv = $this->cache_fetch($cachekey)) !== NULL)
+			return $cv;
+		$content = $this->child->file_read($path);
+		$this->cache_store($cachekey, $content);
+		return $content;
+	}
+	
+	public function file_write ( $path, $data )
+	{
+		$cachekey = "__files:content:$path";
+		$this->cache_store($cachekey, $data);
+		$dir = dirname($path);
+		$base = basename($path);
+		$cachekey = "__files:index:$dir";
+		if (($cv = $this->cache_fetch($cachekey)) === NULL)
+		{
+			$cv = array_fill_keys($this->child->file_directory_list($dir), true);
+		}
+		$cv[$base] = true;
+		$this->cache_store($cachekey, $cv);
+		$this->child->file_write($path, $data);
+	}
+	
+	public function file_erase ( $path )
+	{
+		$cachekey = "__files:content:$path";
+		$this->cache_delete($cachekey);
+		$dir = dirname($path);
+		$base = basename($path);
+		$cachekey = "__files:index:$dir";
+		if (($cv = $this->cache_fetch($cachekey)) !== NULL)
+		{
+			unset($cv[$base]);
+			if (count($cv) == 0)
+			{
+				$this->cache_delete($cachekey);
+			}
+			else
+			{
+				$this->cache_store($cachekey, $cv);
+			}
+		}
+		$this->child->file_erase($path);
+	}
+	
+	public function file_directory_list ( $dir )
+	{
+		$cachekey = "__files:index:$dir";
+		if (($cv = $this->cache_fetch($cachekey)) !== NULL)
+		{
+			return array_keys($cv);
+		}
+		$v = $this->child->file_directory_list($dir);
+		$this->cache_store($cachekey, array_fill_keys($v, true));
+		return $v;
 	}
 }
 

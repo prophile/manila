@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_sink extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
+class manila_driver_sink extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial, manila_interface_filesystem
 {
 	public function __construct ( $driver_config, $table_config )
 	{
@@ -61,6 +61,29 @@ class manila_driver_sink extends manila_driver implements manila_interface_meta,
 	}
 	
 	public function meta_list ( $pattern )
+	{
+		return array();
+	}
+	
+	public function file_exists ( $path )
+	{
+		return false;
+	}
+	
+	public function file_read ( $path )
+	{
+		return NULL;
+	}
+	
+	public function file_write ( $path, $data )
+	{
+	}
+	
+	public function file_erase ( $path )
+	{
+	}
+	
+	public function file_directory_list ( $dir )
 	{
 		return array();
 	}

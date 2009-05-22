@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_passthrough implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
+class manila_driver_passthrough implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial, manila_interface_filesystem
 {
 	private $child;
 	
@@ -17,6 +17,8 @@ class manila_driver_passthrough implements manila_interface_meta, manila_interfa
 			return $this->child->conforms('tables');
 		elseif ($interface == 'tables_serial')
 			return $this->child->conforms('tables_serial');
+		elseif ($interface == 'filesystem')
+			return $this->child->conforms('filesystem');
 		else return parent::conforms($interface);
 	}
 	
@@ -83,6 +85,31 @@ class manila_driver_passthrough implements manila_interface_meta, manila_interfa
 	public function meta_list ( $pattern )
 	{
 		return $this->child->meta_list($pattern);
+	}
+	
+	public function file_exists ( $path )
+	{
+		return $this->child->file_exists($path);
+	}
+	
+	public function file_read ( $path )
+	{
+		return $this->child->file_read($path);
+	}
+	
+	public function file_write ( $path, $data )
+	{
+		$this->child->file_write($path, $data);
+	}
+	
+	public function file_erase ( $path )
+	{
+		$this->child->file_erase($path);
+	}
+	
+	public function file_directory_list ( $dir )
+	{
+		return $this->child->file_directory_list($dir);
 	}
 }
 

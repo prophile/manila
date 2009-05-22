@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_read_only extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
+class manila_driver_read_only extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial, manila_interface_filesystem
 {
 	private $strict = false;
 	private $child;
@@ -10,6 +10,16 @@ class manila_driver_read_only extends manila_driver implements manila_interface_
 		if (isset($driver_config['strict']))
 			$this->strict = $driver_config[$strict];
 		$this->child = manila::get_driver($driver_config['child'], $table_config);
+	}
+	
+	public function conforms ( $interface )
+	{
+		if ($interface == 'meta' ||
+		    $interface == 'tables' ||
+		    $interface == 'tables_serial' ||
+		    $interface == 'filesystem')
+		    return $this->child->conforms($interface);
+		return parent::conforms($interface);
 	}
 	
 	private function violation ()
@@ -88,6 +98,31 @@ class manila_driver_read_only extends manila_driver implements manila_interface_
 	public function meta_list ( $pattern )
 	{
 		return $this->child->meta_list($pattern);
+	}
+	
+	public function file_exists ( $path )
+	{
+		return $this->child->file_exists($path);
+	}
+	
+	public function file_read ( $path )
+	{
+		return $this->child->file_read($path);
+	}
+	
+	public function file_write ( $path, $data )
+	{
+		$this->violation();
+	}
+	
+	public function file_erase ( $path )
+	{
+		$this->violation();
+	}
+	
+	public function file_directory_list ( $dir )
+	{
+		return $this->child->file_directory_list($dir);
 	}
 }
 
