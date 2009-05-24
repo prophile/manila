@@ -14,14 +14,14 @@ class manila_driver_serialize extends manila_driver implements manila_interface_
 	public function table_list_keys ( $tname )
 	{
 		$contents = $this->child->file_directory_list("tables/$tname");
-		foreach ($paths as $key => $item)
+		foreach ($contents as $key => $item)
 		{
 			if (fnmatch('*.obj', $item))
-				$paths[$key] = manila_driver::fs_unescape(str_replace(array($path . '/', '.obj'), array('', ''), $item));
+				$contents[$key] = manila_driver::fs_unescape(substr($item, 0, -4));
 			else
-				unset($paths[$key]);
+				unset($contents[$key]);
 		}
-		return $paths;
+		return $contents;
 	}
 	
 	public function table_key_exists ( $tname, $key )
@@ -90,7 +90,7 @@ class manila_driver_serialize extends manila_driver implements manila_interface_
 	public function table_fetch ( $tname, $key )
 	{
 		$key = manila_driver::fs_escape($key);
-		$content = $this->child->file_read("tables/$tname/$key");
+		$content = $this->child->file_read("tables/$tname/$key.obj");
 		if (!$content)
 			return NULL;
 		return unserialize($content);

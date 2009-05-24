@@ -1,6 +1,6 @@
 <?php
 
-class manila_driver_logger extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial
+class manila_driver_logger extends manila_driver implements manila_interface_meta, manila_interface_tables, manila_interface_tables_serial, manila_interface_filesystem
 {
 	private $child;
 	
@@ -122,6 +122,47 @@ class manila_driver_logger extends manila_driver implements manila_interface_met
 		$msg = sprintf("[LOGGER(%s)] MetaList(%s)", get_class($this->child), $pattern);
 		$rv = $this->child->meta_list($pattern);
 		$msg .= sprintf(" = '%s'\n", $rv);
+		echo $msg;
+		return $rv;
+	}
+	
+	public function file_exists ( $path )
+	{
+		$msg = sprintf("[LOGGER(%s)] FileExists(%s)", get_class($this->child), $path);
+		$rv = $this->child->file_exists($path);
+		$msg .= sprintf(" = '%s'\n", $rv ? 'true' : 'false');
+		echo $msg;
+		return $rv;
+	}
+	
+	public function file_read ( $path )
+	{
+		$msg = sprintf("[LOGGER(%s)] FileRead(%s)", get_class($this->child), $path);
+		$rv = $this->child->file_read($path);
+		$msg .= sprintf(" = '%s'\n", $rv);
+		echo $msg;
+		return $rv;
+	}
+	
+	public function file_write ( $path, $data )
+	{
+		$msg = sprintf("[LOGGER(%s)] FileWrite(%s, %s)\n", get_class($this->child), $path, $data);
+		$this->child->file_write($path, $data);
+		echo $msg;
+	}
+	
+	public function file_erase ( $path )
+	{
+		$msg = sprintf("[LOGGER(%s)] FileErase(%s)\n", get_class($this->child), $path);
+		$this->child->file_erase($path);
+		echo $msg;
+	}
+	
+	public function file_directory_list ( $dir )
+	{
+		$msg = sprintf("[LOGGER(%s)] FileDirectoryList(%s)", get_class($this->child), $dir);
+		$rv = $this->child->file_directory_list($dir);
+		$msg .= sprintf(" = %s\n", self::stringify($rv));
 		echo $msg;
 		return $rv;
 	}

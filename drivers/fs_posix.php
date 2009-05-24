@@ -6,7 +6,8 @@ class manila_driver_fs_posix extends manila_driver implements manila_interface_f
 	
 	private static function mkdir_recursive ( $dir )
 	{
-		@mkdir($dir, 0777, true);
+		if (!file_exists($dir))	
+			@mkdir($dir, 0777, true);
 	}
 	
 	public function __construct ( $driver_config, $table_config )
@@ -55,7 +56,8 @@ class manila_driver_fs_posix extends manila_driver implements manila_interface_f
 	
 	public function file_directory_list ( $dir )
 	{
-		$contents = @scandir($this->root . "/$dir");
+		$path = $this->root . "/$dir";
+		$contents = file_exists($path) ? scandir($path) : NULL;
 		if (!$contents)
 			return array();
 		foreach ($contents as $key => $value)

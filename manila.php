@@ -4,6 +4,7 @@ define('MANILA_INCLUDE_PATH', str_replace('/manila.php', '', __FILE__) . '/inclu
 define('MANILA_DRIVER_PATH', str_replace('/manila.php', '', __FILE__) . '/drivers');
 
 require_once(MANILA_INCLUDE_PATH . '/driver.php');
+require_once(MANILA_INCLUDE_PATH . '/sql.php');
 
 class manila
 {
@@ -17,6 +18,11 @@ class manila
 		$this->driver =& $drv;
 		$this->table_config = $tconf;
 		$this->global_config = $gconf;
+	}
+	
+	public function sql ( $statement )
+	{
+		__manila_sql($this, $statement);
 	}
 	
 	private static function load_driver ( $driver ) // returns name of object
@@ -39,7 +45,7 @@ class manila
 		foreach ($required_interfaces as $ri)
 		{
 			if (!$driver->conforms($ri))
-				return NULL;
+				die("Driver '$id' does not conform to required interface $ri");
 		}
 		return $driver;
 	}
@@ -145,6 +151,14 @@ class manila_table
 			$this->indices = explode(' ', $config['index']);
 		else
 			$this->indices = array();
+	}
+	
+	public function get_key_field_name ()
+	{
+		if (isset($this->config['key_field']))
+			return $this->config['key_field'];
+		else
+			return 'key';
 	}
 	
 	public function get_name ()
@@ -273,11 +287,13 @@ class manila_table
 	
 	public function list_fields ()
 	{
-		$arr = $this->config;
-		unset($arr['key']);
-		if (isset($arr['index']))
-			unset($arr['index']);
-		return array_keys($arr);
+		$arr = array();
+		foreach ($this->config as $key => $value)
+		{
+			if (fnmatch('field.*', $key))
+				$arr[] = substr($key, 6);
+		}
+		return $arr;
 	}
 	
 	public function lookup ( $field, $value )
