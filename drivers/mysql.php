@@ -85,7 +85,11 @@ class manila_driver_mysql extends manila_driver implements manila_interface_meta
 		$sql = "CREATE TABLE `$tbl` ( `$k` " . $this->generate_type($key, true) . ', ';
 		foreach ($conf as $key => $type)
 		{
-			$sql .= "`$key` " . $this->generate_type($type, false) . ", ";
+			if (fnmatch($key, 'field.*'))
+			{
+				$key = substr($key, 6);
+				$sql .= "`$key` " . $this->generate_type($type, false) . ", ";
+			}
 		}
 		$sql = substr($sql, 0, -2);
 		$sql .= ' )';
