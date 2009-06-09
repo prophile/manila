@@ -148,11 +148,13 @@ class manila_driver_fs_compress_zlib extends manila_driver implements manila_int
 {
 	private $child = NULL;
 	private $level;
+	private $threshold;
 	
 	public function __construct ( $driver_config, $table_config )
 	{
 		$this->child = manila::get_driver($driver_config['child'], $table_config, array('filesystem'));
 		$this->level = (int)$driver_config['level'];
+		$this->threshold = isset($driver_config['threshold']) ? (int)$driver_config['threshold'] : 1024;
 	}
 	
 	public function file_exists ( $path )
@@ -164,19 +166,29 @@ class manila_driver_fs_compress_zlib extends manila_driver implements manila_int
 	{
 		$content = $this->child->file_read("$path.gz");
 		if (!$content)
-			return NULL;
+		{
+			return $this->child->file_read($path);
+		}
 		return gzdecode($content);
 	}
 	
 	public function file_write ( $path, $data )
 	{
-		$content = gzencode($data, $this->level);
-		$this->child->file_write("$path.gz", $content);
+		if (strlen($data) > $this->threshold)
+		{	
+			$content = gzencode($data, $this->level);
+			$this->child->file_write("$path.gz", $content);
+		}
+		else
+		{
+			$this->child->file_write($path, $data);
+		}
 	}
 	
 	public function file_erase ( $path )
 	{
 		$this->child->file_erase("$path.gz");
+		$this->child->file_erase($path);
 	}
 	
 	public function file_directory_list ( $dir )
@@ -187,6 +199,10 @@ class manila_driver_fs_compress_zlib extends manila_driver implements manila_int
 			if (fnmatch('*.gz', $value))
 			{
 				$list[$key] = substr($value, 0, -3);
+			}
+			else
+			{
+				$list[$key] = $value;
 			}
 		}
 		return $list;
